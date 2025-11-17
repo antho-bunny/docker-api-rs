@@ -5,6 +5,7 @@ use containers_api::{
     impl_field, impl_filter_func, impl_map_field, impl_opts_builder, impl_str_enum_field,
     impl_str_field, impl_url_bool_field, impl_url_str_field, impl_vec_field,
 };
+use docker_api_stubs::models::HostConfigUlimitsInlineItem;
 
 use std::net::SocketAddr;
 use std::{
@@ -682,6 +683,8 @@ impl ContainerCreateOptsBuilder {
         /// Requested list of available devices with capabilities
         device_requests: Vec<DeviceRequest> => "HostConfig.DeviceRequests"
     );
+
+    impl_vec_field!(ulimit: HostConfigUlimitsInlineItem => "HostConfig.Ulimits");
 }
 
 impl_opts_builder!(url => ContainerRemove);
@@ -819,6 +822,17 @@ mod tests {
 
     #[test]
     fn create_container_opts() {
+        test_case!(
+            ContainerCreateOptsBuilder::default()
+                .image("test_image")
+                .ulimit(vec![HostConfigUlimitsInlineItem {
+                    name: Some(String::from("nofile")),
+                    soft: Some(1024),
+                    hard: Some(2048),
+                }]),
+            r#"{"HostConfig":{"Ulimits":[{"Hard":2048,"Name":"nofile","Soft":1024}]},"Image":"test_image"}"#
+        );
+
         test_case!(
             ContainerCreateOptsBuilder::default().image("test_image"),
             r#"{"HostConfig":{},"Image":"test_image"}"#
